@@ -6,8 +6,8 @@ a set of coupled differential equations. */
 #include <stdlib.h>
 
 const double tstep = 0.1;
-const int tfinal = 10;
-const int num_tsteps = tfinal / tstep + 1;
+const int tfinal = 300;
+const int num_tsteps = (int) (tfinal / tstep) + 1;
 
 /* values of timepoints at integer steps */
 double ts[num_tsteps];
@@ -40,10 +40,11 @@ double dJ_dt(double theta, double t) {
    int t1 = 0, t2 = 100;
    int n1 = 1, n2 = 3;
    double A1 = 0.1, A2 = 0.2;
+   double tolerance = 0.9*tstep; /* tolerance for comparing t with t1,t2 */
 
-   if (t == t1)
+   if (fabs(t - t1) < tolerance)
       return n1 * A1 * sin(n1 * theta);
-   else if (t == t2)
+   else if (fabs(t - t2) < tolerance)
       return n2 * A2 * sin(n2 * theta);
    else 
       return 0;
@@ -53,7 +54,6 @@ static void leapfrog() {
 
    /* RK2 to get the initial values for half-integer values 
    [do we need this given the kick-drift-kick implementation?] */
-
 
 
    /* kick-drift-kick leapfrog routine, using theta,J instead of x,v
@@ -68,8 +68,8 @@ static void leapfrog() {
    /* save the t, theta, and J values in csv files */
    FILE *ts_csv, *thetas_csv, *Js_csv;
 
-   /* initial conditions */
-   double theta_0 = 0., J_0 = 5.;
+   /* arbitrary initial conditions */
+   double theta_0 = 0.13, J_0 = 5.1;
    theta[0] = theta_0, J[0] = J_0, ts[0] = 0.;
 
    /* open files */
@@ -84,6 +84,9 @@ static void leapfrog() {
       theta[i+1] = theta[i] + dtheta_dt(J_half[i])*tstep;
       J[i+1] = J_half[i] + (dJ_dt(theta[i+1], ts[i+1])*tstep/2);
 
+      /* limit angular values to [0, 2pi) */
+      theta[i] = fmod(theta[i], 2*M_PI);
+
       /* write out values at t_n */
       fprintf(ts_csv, "%.10f,", ts[i]);
       fprintf(thetas_csv, "%.10f,", theta[i]);
@@ -92,6 +95,7 @@ static void leapfrog() {
 
    /* write out final values */
    fprintf(ts_csv, "%.10f", ts[num_tsteps-1]);
+   theta[num_tsteps-1] = fmod(theta[num_tsteps-1], 2*M_PI);
    fprintf(thetas_csv, "%.10f", theta[num_tsteps-1]);
    fprintf(Js_csv, "%.10f", J[num_tsteps-1]);
 
