@@ -68,10 +68,11 @@ void compute_coords(double theta_0, double J_0) {
    (theta_0, J_0). */
 void MC_sample(double* pdTheta_0, double* pdJ_0) {
 
-   /* TODO: set up random sampling */
+   double theta_max = 2*M_PI, J_max = 25.;
 
-   *pdTheta_0 = 0.24;
-   *pdJ_0 = 5.2;
+   *pdTheta_0 = ((double)rand()/(double)(RAND_MAX)) * theta_max;
+   /* TODO: consider sampling J from f_0(J) */
+   *pdJ_0 = ((double)rand()/(double)(RAND_MAX)) * J_max;
 }
 
 /* Save the theta and J series for N different particles; i.e.,
@@ -91,7 +92,7 @@ void save_data_series(int N) {
 
    /* save time series */
    for (i = 0; i < num_tsteps; i++)
-      fprintf(ts_csv, "%.10f,", ts[i]);
+      fprintf(ts_csv, "%.2f,", ts[i]);
    fclose(ts_csv);
 
    /* save (theta, J) series for each particle */
@@ -103,8 +104,8 @@ void save_data_series(int N) {
       compute_coords(theta_0, J_0);
       /* save (theta,J) series for this particle */
       for (j = 0; j < num_tsteps; j++) {
-         fprintf(thetas_csv, "%.10f,", thetas[j]);
-         fprintf(Js_csv, "%.10f,", Js[j]);
+         fprintf(thetas_csv, "%.4f,", thetas[j]);
+         fprintf(Js_csv, "%.4f,", Js[j]);
       }
 
       if (i == (N-1))
@@ -121,7 +122,7 @@ void save_data_series(int N) {
 int main(int argc, char *argv[])
 {
 
-   int N = 1;
+   int N = 10;
    int seed = time(NULL);
    /* set random seed */
    srand(seed);
