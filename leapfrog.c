@@ -1,5 +1,5 @@
 /* Module for using the leapfrog method to solve 
-a set of coupled differential equations. */
+Hamilton's equations for the two-hammer potential. */
 
 #include <math.h> /* include value of pi */
 #include <stdio.h>
@@ -13,11 +13,11 @@ const int num_tsteps = (int) (tfinal / tstep) + 1;
 double ts[num_tsteps];
 
 /* values of theta and J at integer time steps */
-double theta[num_tsteps];
-double J[num_tsteps];
+double thetas[num_tsteps];
+double Js[num_tsteps];
 
 /* values of theta and J at half-integer time steps; 
-J_half[i] is the timepoint between J[i] and J[i+1], and similarly
+J_half[i] is the timepoint between Js[i] and Js[i+1], and similarly
 for theta */
 double theta_half[num_tsteps]; /* as of 2/27, not being used */
 double J_half[num_tsteps];
@@ -70,7 +70,7 @@ static void leapfrog() {
 
    /* arbitrary initial conditions */
    double theta_0 = 0.13, J_0 = 5.1;
-   theta[0] = theta_0, J[0] = J_0, ts[0] = 0.;
+   thetas[0] = theta_0, Js[0] = J_0, ts[0] = 0.;
 
    /* open files */
    ts_csv = fopen("ts.csv", "w");
@@ -80,24 +80,24 @@ static void leapfrog() {
    for (int i = 0; i < num_tsteps-1; i++) {
       ts[i+1] = ts[i] + tstep; /* t_(n+1) timepoint */
 
-      J_half[i] = J[i] + (dJ_dt(theta[i], ts[i])*tstep/2);
-      theta[i+1] = theta[i] + dtheta_dt(J_half[i])*tstep;
-      J[i+1] = J_half[i] + (dJ_dt(theta[i+1], ts[i+1])*tstep/2);
+      J_half[i] = Js[i] + (dJ_dt(thetas[i], ts[i])*tstep/2);
+      thetas[i+1] = thetas[i] + dtheta_dt(J_half[i])*tstep;
+      Js[i+1] = J_half[i] + (dJ_dt(thetas[i+1], ts[i+1])*tstep/2);
 
       /* limit angular values to [0, 2pi) */
-      theta[i] = fmod(theta[i], 2*M_PI);
+      thetas[i] = fmod(thetas[i], 2*M_PI);
 
       /* write out values at t_n */
       fprintf(ts_csv, "%.10f,", ts[i]);
-      fprintf(thetas_csv, "%.10f,", theta[i]);
-      fprintf(Js_csv, "%.10f,", J[i]);
+      fprintf(thetas_csv, "%.10f,", thetas[i]);
+      fprintf(Js_csv, "%.10f,", Js[i]);
    }
 
    /* write out final values */
    fprintf(ts_csv, "%.10f", ts[num_tsteps-1]);
-   theta[num_tsteps-1] = fmod(theta[num_tsteps-1], 2*M_PI);
-   fprintf(thetas_csv, "%.10f", theta[num_tsteps-1]);
-   fprintf(Js_csv, "%.10f", J[num_tsteps-1]);
+   thetas[num_tsteps-1] = fmod(thetas[num_tsteps-1], 2*M_PI);
+   fprintf(thetas_csv, "%.10f", thetas[num_tsteps-1]);
+   fprintf(Js_csv, "%.10f", Js[num_tsteps-1]);
 
    fclose(ts_csv);
    fclose(thetas_csv);
